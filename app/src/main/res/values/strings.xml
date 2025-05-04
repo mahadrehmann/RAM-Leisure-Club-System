@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">RAM Solutions</string>
+    <string name="TermsAndAgreement_2"><b><u>Terms of Service</u></b> <font color="#303032">and</font> <b><u>Privacy Policy</u></b></string>
+
 </resources>

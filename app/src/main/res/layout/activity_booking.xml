@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E3F2FD">
+
+    <!-- App bar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbarBookingMenu"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/brown"
+        android:title="Bookings Menu"
+        android:titleTextColor="@android:color/white" />
+
+    <!-- Scrollable content -->
+    <ScrollView
+        android:id="@+id/scrollContent"
+        android:layout_below="@id/toolbarBookingMenu"
+        android:layout_above="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:text="Summary of Bookings"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <!-- Card containing the horizontal list -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_marginTop="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvStatusSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:overScrollMode="never"
+                    android:scrollbars="none"
+                    android:orientation="horizontal"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <Button
+                android:id="@+id/btnCreateBooking"
+                android:layout_marginTop="24dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:backgroundTint="@color/brown"
+                android:text="Create Booking"/>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom nav stub -->
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@android:color/white"
+        android:gravity="center">
+        <!-- your five icons here -->
+    </LinearLayout>
+</RelativeLayout>
