@@ -38,5 +38,7 @@ class LoginActivity : AppCompatActivity() {
             startActivity(Intent(this, AdminLoginActivity::class.java))
         }
 
+
+
     }
 }
