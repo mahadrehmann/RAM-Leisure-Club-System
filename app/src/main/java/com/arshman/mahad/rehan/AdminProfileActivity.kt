@@ -33,7 +33,7 @@ class AdminProfileActivity : AppCompatActivity() {
 
         // Initialize Firebase
         auth = FirebaseAuth.getInstance()
-        database = FirebaseDatabase.getInstance().getReference("Staff")
+        database = FirebaseDatabase.getInstance().getReference("Admin")
 
         // Get current user ID
         val userId = auth.currentUser?.uid

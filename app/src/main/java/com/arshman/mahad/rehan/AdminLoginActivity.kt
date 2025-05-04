@@ -6,10 +6,12 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
 class AdminLoginActivity : AppCompatActivity() {
 
+    private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
     private lateinit var emailInput: EditText
     private lateinit var passwordInput: EditText
@@ -18,16 +20,32 @@ class AdminLoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_staff_login)
-
-        // Initialize Firebase Database
+        setContentView(R.layout.activity_login)
+        // Initialize Firebase
+        auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance().getReference("Admin")
 
-        // Initialize views
         emailInput = findViewById(R.id.Email)
         passwordInput = findViewById(R.id.Password)
         loginButton = findViewById(R.id.loginButton)
         registerButton = findViewById(R.id.Register)
+        val stafflogin = findViewById<Button>(R.id.StaffLogin)
+
+
+//        // Check if user is already logged in
+//        if (auth.currentUser != null) {
+//            val userId = auth.currentUser?.uid
+//            if (userId != null) {
+//                val userOnlineRef = database.child(userId).child("isOnline")
+//                userOnlineRef.setValue(true) // Set user as online
+//                userOnlineRef.onDisconnect().setValue(false) // Set to offline when disconnected
+//            }
+//
+//            // Redirect to MemberHomePage
+//            val intent = Intent(this, MemberHomePage::class.java)
+//            startActivity(intent)
+//            finish()
+//        }
 
         // Handle login button click
         loginButton.setOnClickListener {
@@ -37,7 +55,7 @@ class AdminLoginActivity : AppCompatActivity() {
             if (email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
             } else {
-                authenticateStaff(email, password)
+                authenticateUser(email, password)
             }
         }
 
@@ -48,30 +66,28 @@ class AdminLoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun authenticateStaff(email: String, password: String) {
-        database.orderByChild("email").equalTo(email)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        for (staffSnapshot in snapshot.children) {
-                            val staff = staffSnapshot.getValue(Staff::class.java)
-                            if (staff != null && staff.password == password) {
-                                Toast.makeText(this@AdminLoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
-                                val intent = Intent(this@AdminLoginActivity, AdminHomeActivity::class.java)
-                                startActivity(intent)
-                                finish()
-                                return
-                            }
-                        }
-                        Toast.makeText(this@AdminLoginActivity, "Invalid password", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this@AdminLoginActivity, "Staff not found", Toast.LENGTH_SHORT).show()
+    private fun authenticateUser(email: String, password: String) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Set user as online and set up onDisconnect
+                    val userId = auth.currentUser?.uid
+                    if (userId != null) {
+                        val userOnlineRef = database.child(userId).child("isOnline")
+                        userOnlineRef.setValue(true) // Set user as online
+                        userOnlineRef.onDisconnect().setValue(false) // Set to offline when disconnected
                     }
-                }
 
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@AdminLoginActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this, AdminHomeActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(this, "Authentication failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
-            })
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Login error: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }

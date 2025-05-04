@@ -9,6 +9,14 @@
     android:gravity="center_vertical"
     android:layout_marginBottom="8dp">
 
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/imgMemberProfile"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_profile"
+        android:layout_marginEnd="12dp"
+        android:contentDescription="Profile Image" />
+
     <TextView
         android:id="@+id/tvMemberName"
         android:layout_width="0dp"
