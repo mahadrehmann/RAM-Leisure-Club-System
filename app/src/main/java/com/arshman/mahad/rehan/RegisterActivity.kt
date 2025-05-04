@@ -109,7 +109,9 @@ class RegisterActivity : AppCompatActivity() {
                             password = password,
                             phone = phoneNumber,
                             name = "",
-                            dp = ""
+                            dp = "",
+                            membership = "regular"
+
                         )
 
                         database.child(userId).setValue(user)

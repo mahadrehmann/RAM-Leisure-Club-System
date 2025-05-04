@@ -4,41 +4,88 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import androidx.activity.enableEdgeToEdge
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
 class LoginActivity : AppCompatActivity() {
+
+    private lateinit var auth: FirebaseAuth
+    private lateinit var database: DatabaseReference
+    private lateinit var emailInput: EditText
+    private lateinit var passwordInput: EditText
+    private lateinit var loginButton: Button
+    private lateinit var registerButton: Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_login)
+        // Initialize Firebase
+        auth = FirebaseAuth.getInstance()
+        database = FirebaseDatabase.getInstance().getReference("Members")
 
-        val email = findViewById<EditText>(R.id.Email)
-        val password = findViewById<EditText>(R.id.Password)
-        val loginButton = findViewById<Button>(R.id.loginButton)
-        val register= findViewById<Button>(R.id.Register)
-        val stafflogin = findViewById<Button>(R.id.StaffLogin)
-        val adminlogin = findViewById<Button>(R.id.AdminLogin)
+        emailInput = findViewById(R.id.Email)
+        passwordInput = findViewById(R.id.Password)
+        loginButton = findViewById(R.id.loginButton)
+        registerButton = findViewById(R.id.Register)
 
+        // Check if user is already logged in
+        if (auth.currentUser != null) {
+            val userId = auth.currentUser?.uid
+            if (userId != null) {
+                val userOnlineRef = database.child(userId).child("isOnline")
+                userOnlineRef.setValue(true) // Set user as online
+                userOnlineRef.onDisconnect().setValue(false) // Set to offline when disconnected
+            }
+
+            // Redirect to MemberHomePage
+            val intent = Intent(this, MemberHomePage::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        // Handle login button click
         loginButton.setOnClickListener {
-            startActivity(Intent(this, MemberHomePage::class.java))
+            val email = emailInput.text.toString().trim()
+            val password = passwordInput.text.toString().trim()
+
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+            } else {
+                authenticateUser(email, password)
+            }
         }
 
-        register.setOnClickListener {
-            startActivity(Intent(this, RegisterActivity::class.java))
+        // Handle registration button click
+        registerButton.setOnClickListener {
+            val intent = Intent(this, RegisterActivity::class.java)
+            startActivity(intent)
         }
+    }
 
-        stafflogin.setOnClickListener {
-            startActivity(Intent(this, StaffLoginActivity::class.java))
-        }
+    private fun authenticateUser(email: String, password: String) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Set user as online and set up onDisconnect
+                    val userId = auth.currentUser?.uid
+                    if (userId != null) {
+                        val userOnlineRef = database.child(userId).child("isOnline")
+                        userOnlineRef.setValue(true) // Set user as online
+                        userOnlineRef.onDisconnect().setValue(false) // Set to offline when disconnected
+                    }
 
-        adminlogin.setOnClickListener {
-            startActivity(Intent(this, AdminLoginActivity::class.java))
-        }
-
-
-
+                    Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this, MemberHomePage::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(this, "Authentication failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Login error: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }
