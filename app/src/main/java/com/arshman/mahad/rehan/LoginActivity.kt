@@ -29,6 +29,16 @@ class LoginActivity : AppCompatActivity() {
         passwordInput = findViewById(R.id.Password)
         loginButton = findViewById(R.id.loginButton)
         registerButton = findViewById(R.id.Register)
+        val stafflogin = findViewById<Button>(R.id.StaffLogin)
+        stafflogin.setOnClickListener {
+            val intent = Intent(this, StaffLoginActivity::class.java)
+            startActivity(intent)
+        }
+        val adminlogin = findViewById<Button>(R.id.AdminLogin)
+        adminlogin.setOnClickListener {
+            val intent = Intent(this, AdminLoginActivity::class.java)
+            startActivity(intent)
+        }
 
         // Check if user is already logged in
         if (auth.currentUser != null) {

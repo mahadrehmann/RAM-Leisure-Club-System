@@ -124,6 +124,7 @@ class EditProfileActivity : AppCompatActivity() {
         database.child(userId).updateChildren(updates)
             .addOnSuccessListener {
                 Toast.makeText(this@EditProfileActivity, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this@EditProfileActivity, MemberHomePage::class.java)
                 finish()
             }
             .addOnFailureListener {

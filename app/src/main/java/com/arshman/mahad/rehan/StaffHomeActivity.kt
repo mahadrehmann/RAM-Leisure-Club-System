@@ -19,9 +19,10 @@ class StaffHomeActivity : AppCompatActivity() {
         val profile = findViewById<LinearLayout>(R.id.cardProfileSettings)
         val maintainFacility = findViewById<LinearLayout>(R.id.cardMaintainFacilities)
 
+
         profileview.setOnClickListener {
             // Handle profile button click
-            startActivity(Intent(this, ProfileActivity::class.java))
+            startActivity(Intent(this, StaffProfileActivity::class.java))
         }
 
         book.setOnClickListener {

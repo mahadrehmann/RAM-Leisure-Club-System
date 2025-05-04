@@ -1,5 +1,6 @@
 package com.arshman.mahad.rehan
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -15,7 +16,7 @@ import com.google.firebase.database.*
 import de.hdodenhof.circleimageview.CircleImageView
 import java.io.ByteArrayOutputStream
 
-class StaffEditProfileActivity : AppCompatActivity() {
+class AdminEditProfileActivity : AppCompatActivity() {
 
     private lateinit var profileImage: CircleImageView
     private lateinit var name: EditText
@@ -40,12 +41,13 @@ class StaffEditProfileActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_staff_edit_profile)
+        setContentView(R.layout.activity_admin_edit_profile)
 
         auth = FirebaseAuth.getInstance()
-        database = FirebaseDatabase.getInstance().getReference("Staff")
+        database = FirebaseDatabase.getInstance().getReference("Admin")
 
         profileImage = findViewById(R.id.ProfilePicture)
         name = findViewById(R.id.nameEditText)
@@ -92,7 +94,7 @@ class StaffEditProfileActivity : AppCompatActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@StaffEditProfileActivity, "Failed to load data: ${error.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@AdminEditProfileActivity, "Failed to load data: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -123,12 +125,12 @@ class StaffEditProfileActivity : AppCompatActivity() {
 
         database.child(userId).updateChildren(updates)
             .addOnSuccessListener {
-                Toast.makeText(this@StaffEditProfileActivity, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(this@StaffEditProfileActivity, StaffHomeActivity::class.java))
+                Toast.makeText(this@AdminEditProfileActivity, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this@AdminEditProfileActivity, AdminHomeActivity::class.java))
                 finish()
             }
             .addOnFailureListener {
-                Toast.makeText(this@StaffEditProfileActivity, "Failed to update profile", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@AdminEditProfileActivity, "Failed to update profile", Toast.LENGTH_SHORT).show()
             }
     }
 }

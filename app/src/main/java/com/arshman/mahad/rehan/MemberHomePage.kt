@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -36,6 +37,36 @@ class MemberHomePage : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
+        }
+
+        val profile = findViewById<LinearLayout>(R.id.llProfile)
+        profile.setOnClickListener {
+            val intent = Intent(this, ProfileActivity::class.java)
+            startActivity(intent)
+        }
+
+        val book = findViewById<LinearLayout>(R.id.cardBook)
+        book.setOnClickListener {
+            val intent = Intent(this, BookingActivity::class.java)
+            startActivity(intent)
+        }
+
+        val bills = findViewById<LinearLayout>(R.id.cardBills)
+        bills.setOnClickListener {
+            val intent = Intent(this, PaymentActivity::class.java)
+            startActivity(intent)
+        }
+
+        val cardMembership = findViewById<LinearLayout>(R.id.cardMembership)
+        cardMembership.setOnClickListener {
+            val intent = Intent(this, MembershipActivity::class.java)
+            startActivity(intent)
+        }
+
+        val profileSettings = findViewById<LinearLayout>(R.id.cardProfileSettings)
+        profileSettings.setOnClickListener {
+            val intent = Intent(this, EditProfileActivity::class.java)
+            startActivity(intent)
         }
 
         // Initialize views

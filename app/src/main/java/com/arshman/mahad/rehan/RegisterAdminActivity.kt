@@ -1,5 +1,6 @@
 package com.arshman.mahad.rehan
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -9,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
-class RegisterStaffActivity : AppCompatActivity() {
+class RegisterAdminActivity : AppCompatActivity() {
 
     private lateinit var username: EditText
     private lateinit var email: EditText
@@ -20,12 +21,13 @@ class RegisterStaffActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_register_staff)
+        setContentView(R.layout.activity_register_admin)
 
         auth = FirebaseAuth.getInstance()
-        database = FirebaseDatabase.getInstance().getReference("Staff")
+        database = FirebaseDatabase.getInstance().getReference("Admin")
 
         username = findViewById(R.id.Username)
         email = findViewById(R.id.Email)
@@ -39,7 +41,7 @@ class RegisterStaffActivity : AppCompatActivity() {
 
         val loginButton = findViewById<Button>(R.id.Login)
         loginButton.setOnClickListener {
-            startActivity(Intent(this, StaffLoginActivity::class.java))
+            startActivity(Intent(this, AdminLoginActivity::class.java))
         }
     }
 
@@ -84,14 +86,14 @@ class RegisterStaffActivity : AppCompatActivity() {
                                 }
 
                                 override fun onCancelled(error: DatabaseError) {
-                                    Toast.makeText(this@RegisterStaffActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@RegisterAdminActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
                                 }
                             })
                     }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@RegisterStaffActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@RegisterAdminActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
                 }
             })
     }
@@ -115,8 +117,8 @@ class RegisterStaffActivity : AppCompatActivity() {
 
                         database.child(userId).setValue(staff)
                             .addOnSuccessListener {
-                                Toast.makeText(this, "Staff Registered Successfully", Toast.LENGTH_SHORT).show()
-                                startActivity(Intent(this, StaffEditProfileActivity::class.java))
+                                Toast.makeText(this, "Admin Registered Successfully", Toast.LENGTH_SHORT).show()
+                                startActivity(Intent(this, AdminEditProfileActivity::class.java))
                                 finish()
                             }
                             .addOnFailureListener {

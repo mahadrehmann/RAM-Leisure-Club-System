@@ -19,6 +19,11 @@ class AdminHomeActivity : AppCompatActivity() {
         val managemember = findViewById<LinearLayout>(R.id.cardManagemember)
         val managestaff = findViewById<LinearLayout>(R.id.cardManagestaff)
         val managefacility = findViewById<LinearLayout>(R.id.cardMaintainFacilities)
+        val profileview = findViewById<LinearLayout>(R.id.llProfile)
+         profileview.setOnClickListener {
+             // Handle click for Profile View
+             startActivity(Intent(this, AdminProfileActivity::class.java))
+         }
 
         managemember.setOnClickListener {
             // Handle click for Manage Member
