@@ -13,6 +13,33 @@
         android:theme="@style/Theme.RAMSolutions"
         tools:targetApi="31">
         <activity
+            android:name=".StaffEditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".StaffLoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AdminLoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterStaffActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ManageStaffActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ManageMemberActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RefundActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MembershipActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PaymentActivity"
+            android:exported="false" />
+        <activity
             android:name=".CreateBookingActivity"
             android:exported="false" />
         <activity

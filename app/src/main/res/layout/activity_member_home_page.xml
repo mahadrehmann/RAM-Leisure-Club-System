@@ -166,7 +166,12 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Logout Button -->
+
+
         </LinearLayout>
+
+
     </ScrollView>
 
 </RelativeLayout>

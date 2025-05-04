@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".LoginActivity">
+    tools:context=".StaffLoginActivity">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -102,39 +102,12 @@
                 android:layout_marginBottom="10dp"
                 android:background="#303032"/>
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/Divider"
-                android:layout_marginTop="10dp"
-                android:id="@+id/StaffLogin"
-                android:backgroundTint="@color/brown"
-                android:text="Staff Login"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/StaffLogin"
-                android:id="@+id/AdminLogin"
-                android:backgroundTint="@color/brown"
-                android:text="Admin Login"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                />
-
-
-
             <LinearLayout
                 android:layout_centerHorizontal="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:layout_below="@id/AdminLogin"
+                android:layout_below="@id/Divider"
                 android:orientation="horizontal">
 
                 <TextView

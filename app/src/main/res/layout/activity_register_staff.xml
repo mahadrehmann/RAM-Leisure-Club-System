@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".LoginActivity">
+    tools:context=".RegisterStaffActivity">
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
         <RelativeLayout
             android:layout_marginLeft="20dp"
@@ -22,42 +21,74 @@
 
             <View
                 android:id="@+id/AppLogo"
-                android:layout_width="150dp"
-                android:layout_height="150dp"
-                android:layout_marginBottom="30dp"
-                android:layout_marginTop="25dp"
+                android:layout_width="130dp"
+                android:layout_height="125dp"
+                android:layout_marginBottom="20dp"
                 android:layout_centerHorizontal="true"
                 android:background="@drawable/ras"/>
 
             <TextView
-                android:id="@+id/WelcomeText"
+                android:id="@+id/GreatText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Welcome!"
+                android:text="Great!"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="#303032"
                 android:layout_below="@id/AppLogo"/>
 
             <TextView
-                android:id="@+id/WelcomingText"
+                android:id="@+id/GreetingText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="We’re happy to see you. Please login to continue."
+                android:text="We’re so excited to get you onboard!"
                 android:textSize="20sp"
                 android:textColor="#303032"
-                android:layout_below="@id/WelcomeText"/>
+                android:layout_below="@id/GreatText"/>
+
+            <!--            <EditText-->
+            <!--                android:id="@+id/Name"-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="50dp"-->
+            <!--                android:layout_below="@id/GreetingText"-->
+            <!--                android:layout_marginTop="20dp"-->
+            <!--                android:hint="Name"-->
+            <!--                android:padding="10dp"-->
+            <!--                android:background="@null"-->
+            <!--                android:inputType="textPersonName"/>-->
+
+            <EditText
+                android:id="@+id/Username"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_below="@id/GreatText"
+                android:layout_marginTop="40dp"
+                android:hint="Username"
+                android:padding="10dp"
+                android:background="@null"
+                android:inputType="text"/>
+
+            <EditText
+                android:id="@+id/PhoneNumber"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_below="@id/Username"
+                android:layout_marginTop="20dp"
+                android:hint="Phone Number"
+                android:padding="10dp"
+                android:background="@null"
+                android:inputType="phone"/>
 
             <EditText
                 android:id="@+id/Email"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:layout_below="@id/WelcomingText"
+                android:layout_below="@id/PhoneNumber"
                 android:layout_marginTop="20dp"
                 android:hint="Email"
                 android:padding="10dp"
                 android:background="@null"
-                android:inputType="text"/>
+                android:inputType="textEmailAddress"/>
 
             <EditText
                 android:id="@+id/Password"
@@ -71,89 +102,61 @@
                 android:inputType="textPassword"/>
 
             <TextView
-                android:id="@+id/ForgotPassword"
+                android:id="@+id/TermsAndAgreement_1"
+                android:textColor="#303032"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="By clicking Agree and continue below, I agree to"
+                android:layout_marginTop="10dp"
+                android:textSize="14sp"
+                android:layout_below="@id/Password"/>
+
+            <TextView
+                android:id="@+id/TermsAndAgreement_2"
                 android:textColor="#574836"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Forgot Password?"
-                android:layout_marginTop="10dp"
+                android:text="@string/TermsAndAgreement_2"
                 android:textSize="14sp"
-                android:layout_marginBottom="20dp"
-                android:layout_below="@id/Password"/>
+                android:layout_below="@id/TermsAndAgreement_1"
+                android:layout_marginBottom="20dp"/>
 
             <Button
-                android:id="@+id/loginButton"
-                android:layout_below="@id/ForgotPassword"
+                android:id="@+id/Register"
+                android:layout_below="@id/TermsAndAgreement_2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Login"
+                android:text="Register"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
                 android:elevation="16dp"
                 android:backgroundTint="@color/brown"/>
 
-            <View
-                android:id="@+id/Divider"
-                android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:layout_below="@id/loginButton"
-                android:layout_marginTop="25dp"
-                android:layout_marginBottom="10dp"
-                android:background="#303032"/>
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/Divider"
-                android:layout_marginTop="10dp"
-                android:id="@+id/StaffLogin"
-                android:backgroundTint="@color/brown"
-                android:text="Staff Login"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/StaffLogin"
-                android:id="@+id/AdminLogin"
-                android:backgroundTint="@color/brown"
-                android:text="Admin Login"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                />
-
-
-
             <LinearLayout
                 android:layout_centerHorizontal="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:layout_below="@id/AdminLogin"
+                android:layout_below="@id/Register"
+                android:layout_marginTop="20dp"
                 android:orientation="horizontal">
 
                 <TextView
-                    android:text="Don't have an account?"
+                    android:text="Already have an account?"
                     android:textSize="20sp"
                     android:textColor="#303032"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
 
                 <Button
-                    android:id="@+id/Register"
+                    android:id="@+id/Login"
                     android:textSize="20sp"
                     android:textColor="@color/white"
-                    android:backgroundTint="@color/brown"
                     android:textAllCaps="false"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@null"
-                    android:text="Register"/>
+                    android:backgroundTint="@color/brown"
+                    android:text="Log In"/>
 
             </LinearLayout>
 

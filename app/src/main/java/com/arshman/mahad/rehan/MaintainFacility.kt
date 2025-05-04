@@ -18,6 +18,7 @@ class MaintainFacility : AppCompatActivity() {
 
         schedule.setOnClickListener {
             Toast.makeText(this, "Schedule button clicked", Toast.LENGTH_SHORT).show()
+            finish()
         }
 
     }

@@ -246,14 +246,5 @@
             app:strokeWidth="1dp" />
     </RelativeLayout>
 
-    <!-- Bottom Navigation -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="@color/white"
-        app:itemIconTint="@color/black"
-        app:menu="@menu/bottom_navigaition_menu" />
 
 </RelativeLayout>
