@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E3F2FD">
+    android:background="@color/white">
 
     <!-- App bar -->
     <androidx.appcompat.widget.Toolbar
@@ -27,7 +27,7 @@
             android:orientation="vertical"
             android:padding="16dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
 
             <TextView
                 android:text="Summary of Bookings"

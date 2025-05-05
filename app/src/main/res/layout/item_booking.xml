@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvBookingTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Booking Title" />
+    <TextView
+        android:id="@+id/tvBookingDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Booking Description"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/tvBookingTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Booking Time"
+        android:layout_marginTop="4dp"
+        android:textStyle="italic" />
+</LinearLayout>

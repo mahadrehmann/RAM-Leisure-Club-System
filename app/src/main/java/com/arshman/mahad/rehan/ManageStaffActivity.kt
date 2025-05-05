@@ -1,50 +1,79 @@
 package com.arshman.mahad.rehan
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.*
 
 class ManageStaffActivity : AppCompatActivity() {
-    private val staff = mutableListOf<String>()
+    private lateinit var database: DatabaseReference
     private lateinit var adapter: StaffAdapter
+    private val staffList = mutableListOf<Staff>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_manage_staff)
 
-        // find views
-        val tvTotalStaff  = findViewById<TextView>(R.id.tvTotalStaff)
-        val rvStaff       = findViewById<RecyclerView>(R.id.rvStaff)
-        val btnAddStaff   = findViewById<Button>(R.id.btnAddStaff)
+        val tvTotalStaff = findViewById<TextView>(R.id.tvTotalStaff)
+        val rvStaff = findViewById<RecyclerView>(R.id.rvStaff)
+        val btnAddStaff = findViewById<Button>(R.id.btnAddStaff)
 
-        // setup RecyclerView + adapter
-        adapter = StaffAdapter(staff) { pos ->
-            staff.removeAt(pos)
-            adapter.notifyItemRemoved(pos)
-            tvTotalStaff.text = "Total: ${staff.size}"
+        // Initialize Firebase Database
+        database = FirebaseDatabase.getInstance().getReference("Staff")
+
+        // Set up RecyclerView
+        adapter = StaffAdapter(staffList) { position ->
+            val staff = staffList[position]
+            deleteStaffFromDatabase(staff.id, position, tvTotalStaff)
         }
         rvStaff.layoutManager = LinearLayoutManager(this)
-        rvStaff.adapter       = adapter
+        rvStaff.adapter = adapter
 
-        // preload dummy data
-        listOf("John","Mary","Steve").forEach {
-            staff.add(it)
-        }
-        adapter.notifyDataSetChanged()
-        tvTotalStaff.text = "Total: ${staff.size}"
+        // Load staff from the database
+        loadStaff(tvTotalStaff)
 
-        // button handlers
         btnAddStaff.setOnClickListener {
             Toast.makeText(this, "Add Staff clicked", Toast.LENGTH_SHORT).show()
-            startActivity(
-                Intent(this, RegisterStaffActivity::class.java)
-            )
+            // Navigate to staff registration activity
         }
+    }
+
+    private fun loadStaff(tvTotalStaff: TextView) {
+        database.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                staffList.clear()
+                for (child in snapshot.children) {
+                    val staff = child.getValue(Staff::class.java)
+                    staff?.let { staffList.add(it) }
+                }
+                adapter.notifyDataSetChanged()
+                tvTotalStaff.text = "Total: ${staffList.size}"
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@ManageStaffActivity, "Failed to load staff: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun deleteStaffFromDatabase(staffId: String, position: Int, tvTotalStaff: TextView) {
+        database.child(staffId).removeValue()
+            .addOnSuccessListener {
+                if (position >= 0 && position < staffList.size) {
+                    staffList.removeAt(position)
+                    adapter.notifyItemRemoved(position)
+                    tvTotalStaff.text = "Total: ${staffList.size}"
+                    Toast.makeText(this, "Staff removed successfully", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Invalid position", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to remove staff: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }
