@@ -6,28 +6,38 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class PreviousPaymentAdapter(
-    private val items: List<PaymentRecord>
-) : RecyclerView.Adapter<PreviousPaymentAdapter.PVH>() {
+class PaymentAdapter(
+    private val payments: List<Payment>,
+    private val onPaymentClick: (Payment) -> Unit
+) : RecyclerView.Adapter<PaymentAdapter.PaymentViewHolder>() {
 
-    inner class PVH(view: View) : RecyclerView.ViewHolder(view) {
-        val tvDate   : TextView = view.findViewById(R.id.tvPaymentDate)
-        val tvType   : TextView = view.findViewById(R.id.tvPaymentType)
-        val tvAmount : TextView = view.findViewById(R.id.tvPaymentAmount)
+    inner class PaymentViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val date: TextView = view.findViewById(R.id.tvPaymentDate)
+        val type: TextView = view.findViewById(R.id.tvPaymentType)
+        val amount: TextView = view.findViewById(R.id.tvPaymentAmount)
+
+        init {
+            view.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onPaymentClick(payments[position])
+                }
+            }
+        }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PVH {
-        val v = LayoutInflater.from(parent.context)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PaymentViewHolder {
+        val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_previous_payment, parent, false)
-        return PVH(v)
+        return PaymentViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: PVH, position: Int) {
-        val rec = items[position]
-        holder.tvDate.text   = rec.date
-        holder.tvType.text   = "Type: ${rec.type}"
-        holder.tvAmount.text = "Total: ${rec.amount}"
+    override fun onBindViewHolder(holder: PaymentViewHolder, position: Int) {
+        val payment = payments[position]
+        holder.date.text = payment.date
+        holder.type.text = "Type: ${payment.type}"
+        holder.amount.text = "Total: ${payment.amount}"
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = payments.size
 }
