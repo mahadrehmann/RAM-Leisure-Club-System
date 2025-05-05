@@ -13,6 +13,12 @@
         android:theme="@style/Theme.RAMSolutions"
         tools:targetApi="31">
         <activity
+            android:name=".ScheduleMaintenance"
+            android:exported="false" />
+        <activity
+            android:name=".ScheduleMaintainenance"
+            android:exported="false" />
+        <activity
             android:name=".AdminProfileActivity"
             android:exported="false" />
         <activity
@@ -56,7 +62,8 @@
             android:exported="false" />
         <activity
             android:name=".MaintainFacility"
-            android:exported="false" />
+            android:exported="false"
+        />
         <activity
             android:name=".AdminHomeActivity"
             android:exported="false" />

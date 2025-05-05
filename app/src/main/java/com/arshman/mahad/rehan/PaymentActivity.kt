@@ -3,6 +3,7 @@ package com.arshman.mahad.rehan
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,6 +16,8 @@ class PaymentActivity : AppCompatActivity() {
     private lateinit var adapter: PaymentAdapter
     private val paymentList = mutableListOf<Payment>()
     private var selectedPayment: Payment? = null
+    private lateinit var tvPlanName: TextView
+    private lateinit var userId: String // Assume this is retrieved from the logged-in user session
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,7 +26,12 @@ class PaymentActivity : AppCompatActivity() {
 
         val recycler = findViewById<RecyclerView>(R.id.rvPrevious)
         val btnPaySelected = findViewById<Button>(R.id.btnPaySelected)
-        database = FirebaseDatabase.getInstance().getReference("Payment")
+        tvPlanName = findViewById(R.id.tvPlanName)
+        database = FirebaseDatabase.getInstance().reference
+        userId = "USER_ID" // Replace with actual user ID from authentication/session
+
+        // Fetch membership type
+        fetchMembershipType()
 
         // Set up RecyclerView
         adapter = PaymentAdapter(paymentList) { payment ->
@@ -44,8 +52,19 @@ class PaymentActivity : AppCompatActivity() {
         }
     }
 
+    private fun fetchMembershipType() {
+        database.child("User").child(userId).child("membership").get()
+            .addOnSuccessListener { snapshot ->
+                val membershipType = snapshot.value as? String
+                tvPlanName.text = membershipType ?: "Unknown"
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to fetch membership type: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     private fun loadPayments() {
-        database.addValueEventListener(object : ValueEventListener {
+        database.child("Payment").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 paymentList.clear()
                 for (child in snapshot.children) {
@@ -62,7 +81,7 @@ class PaymentActivity : AppCompatActivity() {
     }
 
     private fun markAsPaid(payment: Payment) {
-        database.child(payment.id).removeValue()
+        database.child("Payment").child(payment.id).removeValue()
             .addOnSuccessListener {
                 paymentList.remove(payment)
                 adapter.notifyDataSetChanged()

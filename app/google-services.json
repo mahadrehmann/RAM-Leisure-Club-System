@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "975196032514",
+    "project_id": "ramsolutions-8e9a8",
+    "firebase_url": "https://ramsolutions-8e9a8-default-rtdb.firebaseio.com",
+    "storage_bucket": "ramsolutions-8e9a8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:975196032514:android:75fdbdd0d9c38d3fbfa11b",
+        "android_client_info": {
+          "package_name": "com.arshman.mahad.rehan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7kx5pK5tgAiRRCLvKk2oH7VMKGf1FjDI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

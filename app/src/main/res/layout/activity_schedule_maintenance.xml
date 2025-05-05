@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FAFAFA">
+
+    <!-- App bar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbarSchedule"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/brown"
+        android:title="Schedule Maintenance"
+        android:titleTextColor="@android:color/white"/>
+
+    <!-- Scrollable Form -->
+    <ScrollView
+        android:layout_below="@id/toolbarSchedule"
+        android:layout_above="@+id/btnSchedule"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Facility Spinner -->
+                <TextView
+                    android:text="Select Facility"
+                    android:textSize="16sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <Spinner
+                    android:id="@+id/spinnerFacility"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"/>
+
+                <!-- Due Date Picker -->
+                <TextView
+                    android:text="Select Due Date"
+                    android:textSize="16sp"
+                    android:layout_marginTop="16dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <EditText
+                    android:id="@+id/etDueDate"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:hint="Tap to choose date"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:drawableEnd="@android:drawable/ic_menu_my_calendar"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </ScrollView>
+
+    <!-- Schedule Button -->
+    <Button
+        android:id="@+id/btnSchedule"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Schedule Maintenance"
+        android:backgroundTint="@color/brown"
+        android:layout_margin="16dp"/>
+</RelativeLayout>
