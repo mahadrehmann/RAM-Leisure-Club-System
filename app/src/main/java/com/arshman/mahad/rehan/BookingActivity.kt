@@ -1,6 +1,8 @@
 package com.arshman.mahad.rehan
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -27,6 +29,14 @@ class BookingActivity : AppCompatActivity() {
 
         // Load bookings from Firebase
         loadBookings()
+
+        val booking = findViewById<Button>(R.id.btnCreateBooking)
+        booking.setOnClickListener {
+            // Start CreateBookingActivity
+            startActivity(Intent(this, CreateBookingActivity::class.java))
+        }
+
+
     }
 
     private fun loadBookings() {

@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.gms.google.services)
+
 }
 
 android {
@@ -16,6 +17,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Set FCM default notification channel ID
+        manifestPlaceholders["onesignal_app_id"] = "e31abef6-4c88-4338-8d3e-d4fb59f34de1"
+        manifestPlaceholders["onesignal_google_project_number"] = "REMOTE"
     }
 
     buildTypes {
@@ -37,24 +42,36 @@ android {
 }
 
 dependencies {
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 
-    implementation ("androidx.recyclerview:recyclerview:1.2.1")
-
-    implementation (files("libs/exifinterface-1.3.7.aar"))
+    implementation(files("libs/exifinterface-1.3.7.aar"))
     implementation(files("libs/camera-camera2-1.4.1.aar"))
     implementation(files("libs/camera-lifecycle-1.4.1.aar"))
     implementation(files("libs/camera-view-1.4.1.aar"))
     implementation(libs.androidx.core.ktx)
-    implementation ("de.hdodenhof:circleimageview:3.1.0")
-    implementation ("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
 
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+
+    // Firebase dependencies
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.messaging) // FCM dependency
+    implementation(libs.firebase.dataconnect)
+    implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
+
+    // OneSignal SDK - using the latest version
+    implementation("com.onesignal:OneSignal:4.8.6")
+    // OkHttp for network requests
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+    // Testing dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

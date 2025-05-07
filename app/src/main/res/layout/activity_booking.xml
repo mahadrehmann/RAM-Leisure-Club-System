@@ -54,17 +54,21 @@
                     android:orientation="horizontal"/>
             </com.google.android.material.card.MaterialCardView>
 
-            <Button
-                android:id="@+id/btnCreateBooking"
-                android:layout_marginTop="24dp"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:backgroundTint="@color/brown"
-                android:text="Create Booking"/>
+
         </LinearLayout>
     </ScrollView>
 
     <!-- Bottom nav stub -->
+
+    <Button
+        android:id="@+id/btnCreateBooking"
+        android:layout_marginTop="24dp"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_above="@id/bottomNav"
+        android:backgroundTint="@color/brown"
+        android:text="Create Booking"/>
+
     <LinearLayout
         android:id="@+id/bottomNav"
         android:layout_alignParentBottom="true"

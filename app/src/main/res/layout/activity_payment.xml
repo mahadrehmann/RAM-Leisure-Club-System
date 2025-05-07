@@ -105,7 +105,7 @@
                 android:id="@+id/tvPrevLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Previous Payments"
+                android:text="Pending Payments"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp"/>

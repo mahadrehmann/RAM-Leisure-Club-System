@@ -2,21 +2,55 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
+        android:name=".ApplicationClass"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ras"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.RAMSolutions"
         tools:targetApi="31">
+
+        <!-- OneSignal Notification Channel -->
+        <meta-data
+            android:name="com.onesignal.NotificationServiceExtension"
+            android:value="com.onesignal.example.NotificationServiceExtension" />
+
+        <service
+            android:name="com.onesignal.notifications.services.SyncService"
+            android:stopWithTask="true"
+            android:exported="false" />
+
+        <!-- FCM Receivers -->
+        <service
+            android:name="com.onesignal.FCMIntentService"
+            android:exported="false" />
+
+        <service
+            android:name="com.onesignal.FCMIntentJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+
+        <receiver
+            android:name="com.onesignal.FCMBroadcastReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </receiver>
+
+
         <activity
             android:name=".ScheduleMaintenance"
-            android:exported="false" />
-        <activity
-            android:name=".ScheduleMaintainenance"
             android:exported="false" />
         <activity
             android:name=".AdminProfileActivity"
