@@ -1,134 +1,131 @@
+// RegisterActivity.kt
 package com.arshman.mahad.rehan
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
+import com.google.firebase.database.FirebaseDatabase
+import java.util.*
 
 class RegisterActivity : AppCompatActivity() {
 
-    private lateinit var username: EditText
-    private lateinit var email: EditText
-    private lateinit var password: EditText
-    private lateinit var phoneNumber: EditText
-    private lateinit var registerButton: Button
+    private lateinit var usernameEt: EditText
+    private lateinit var emailEt: EditText
+    private lateinit var passwordEt: EditText
+    private lateinit var phoneEt: EditText
+    private lateinit var registerBtn: Button
 
     private lateinit var auth: FirebaseAuth
-    private lateinit var database: DatabaseReference
+    private val database = FirebaseDatabase.getInstance()
+        .getReference("Members")
+    private lateinit var dbHelper: UserDbHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
 
-        auth = FirebaseAuth.getInstance()
-        database = FirebaseDatabase.getInstance().getReference("Members")
+        dbHelper     = UserDbHelper(this)
+        auth         = FirebaseAuth.getInstance()
+        usernameEt   = findViewById(R.id.Username)
+        emailEt      = findViewById(R.id.Email)
+        passwordEt   = findViewById(R.id.Password)
+        phoneEt      = findViewById(R.id.PhoneNumber)
+        registerBtn  = findViewById(R.id.Register)
 
-        username = findViewById(R.id.Username)
-        email = findViewById(R.id.Email)
-        password = findViewById(R.id.Password)
-        phoneNumber = findViewById(R.id.PhoneNumber)
-        registerButton = findViewById(R.id.Register)
+        registerBtn.setOnClickListener { saveUserData() }
 
-        registerButton.setOnClickListener {
-            saveUserData()
-        }
-
-        val loginButton = findViewById<Button>(R.id.Login)
-        loginButton.setOnClickListener {
+        findViewById<Button>(R.id.Login).setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
         }
     }
 
     private fun saveUserData() {
-        val userUsername = username.text.toString().trim()
-        val userEmail = email.text.toString().trim()
-        val userPassword = password.text.toString().trim()
-        val userPhoneNumber = phoneNumber.text.toString().trim()
+        val uname = usernameEt.text.toString().trim()
+        val mail  = emailEt.text.toString().trim()
+        val pass  = passwordEt.text.toString().trim()
+        val phone = phoneEt.text.toString().trim()
 
-        if (userUsername.isEmpty() || userEmail.isEmpty() || userPassword.isEmpty() || userPhoneNumber.isEmpty()) {
+        if (uname.isEmpty() || mail.isEmpty() || pass.isEmpty() || phone.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
             return
         }
 
-        checkIfUserExists(userUsername, userEmail) { exists, field ->
-            if (exists) {
-                when (field) {
-                    "username" -> Toast.makeText(this, "Username already exists", Toast.LENGTH_SHORT).show()
-                    "email" -> Toast.makeText(this, "Email already registered", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                registerUser(userUsername, userEmail, userPassword, userPhoneNumber)
-            }
+        // 1) Build local User object
+        val localId = UUID.randomUUID().toString()
+        val user = User(
+            id         = localId,
+            username   = uname,
+            email      = mail,
+            password   = pass,
+            phone      = phone,
+            name       = "",
+            dp         = "",
+            membership = "regular",
+            isSynced   = 0
+        )
+
+        // 2) Save offline
+        dbHelper.insertOrUpdate(user)
+
+        // 3) If offline, finish immediately
+        if (!isConnected()) {
+            Toast.makeText(
+                this,
+                "Registered offline. It will sync when you’re back online.",
+                Toast.LENGTH_LONG
+            ).show()
+            finish()
+            return
         }
-    }
 
-    private fun checkIfUserExists(username: String, email: String, callback: (Boolean, String?) -> Unit) {
-        database.orderByChild("username").equalTo(username)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        callback(true, "username")
-                    } else {
-                        database.orderByChild("email").equalTo(email)
-                            .addListenerForSingleValueEvent(object : ValueEventListener {
-                                override fun onDataChange(snapshot: DataSnapshot) {
-                                    if (snapshot.exists()) {
-                                        callback(true, "email")
-                                    } else {
-                                        callback(false, null)
-                                    }
-                                }
-
-                                override fun onCancelled(error: DatabaseError) {
-                                    Toast.makeText(this@RegisterActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
-                                }
-                            })
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@RegisterActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
-    }
-
-    private fun registerUser(username: String, email: String, password: String, phoneNumber: String) {
-        auth.createUserWithEmailAndPassword(email, password)
+        // 4) Otherwise perform online signup
+        auth.createUserWithEmailAndPassword(mail, pass)
             .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    val userId = auth.currentUser?.uid
-                    if (userId != null) {
-                        val user = User(
-                            id = userId,
-                            username = username,
-                            email = email,
-                            password = password,
-                            phone = phoneNumber,
-                            name = "",
-                            dp = "",
-                            membership = "regular"
-
-                        )
-
-                        database.child(userId).setValue(user)
-                            .addOnSuccessListener {
-                                Toast.makeText(this, "User Registered Successfully", Toast.LENGTH_SHORT).show()
-                                startActivity(Intent(this, EditProfileActivity::class.java))
-                                finish()
-                            }
-                            .addOnFailureListener {
-                                Toast.makeText(this, "Failed to register user", Toast.LENGTH_SHORT).show()
-                            }
-                    } else {
-                        Toast.makeText(this, "Failed to get user ID", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    Toast.makeText(this, "Authentication failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                if (!task.isSuccessful) {
+                    Toast.makeText(
+                        this,
+                        "Auth failed: ${task.exception?.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@addOnCompleteListener
                 }
+                // 5) On success, push profile to Realtime DB
+                val uid = auth.currentUser!!.uid
+                val remoteUser = user.copy(id = uid, isSynced = 1)
+                database.child(uid)
+                    .setValue(remoteUser)
+                    .addOnSuccessListener {
+                        // 6) Mark local record synced
+                        dbHelper.markSynced(localId)
+                        Toast.makeText(
+                            this,
+                            "User Registered Successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        startActivity(Intent(this, EditProfileActivity::class.java))
+                        finish()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(
+                            this,
+                            "Profile save failed. Will sync later.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        finish()
+                    }
             }
+    }
+
+    private fun isConnected(): Boolean {
+        val cm  = getSystemService(Context.CONNECTIVITY_SERVICE)
+                as ConnectivityManager
+        val net = cm.activeNetworkInfo
+        return net != null && net.isConnected
     }
 }
