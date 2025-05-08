@@ -1,14 +1,14 @@
 package com.arshman.mahad.rehan
 
 data class Admin(
-    val id: String,
-    val username: String,
-    val email: String,
-    val password: String,
-    val phone: String,
-    val name: String,
-    val dp: String,
-)
-{
-    constructor() : this("", "", "", "", "", "", "")
+    val id: String = "",
+    val username: String = "",
+    val email: String = "",
+    val password: String = "",
+    val phone: String = "",
+    val name: String = "",
+    val dp: String = "",
+    var isSynced: Int = 0    // 0 = not yet sent to Firebase; 1 = sent
+) {
+    constructor() : this("", "", "", "", "", "", "", 0)
 }
