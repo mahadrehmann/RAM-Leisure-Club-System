@@ -3,39 +3,56 @@ package com.arshman.mahad.rehan
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Base64
+import android.util.Log
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.arshman.mahad.rehan.ApiService
+import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import de.hdodenhof.circleimageview.CircleImageView
-import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
+import java.io.FileOutputStream
+import java.util.*
 
 class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var profileImage: CircleImageView
-    private lateinit var name: EditText
-    private lateinit var username: EditText
-    private lateinit var contact: EditText
+    private lateinit var nameEt: EditText
+    private lateinit var usernameEt: EditText
+    private lateinit var contactEt: EditText
     private lateinit var updateButton: Button
 
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
-    private var userId: String? = null
+    private lateinit var api: ApiService
+    private var userId: String = ""
 
-    private var encodedImage: String? = null
+    private var selectedImageUri: Uri? = null
 
-    private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK && result.data != null) {
-            val imageUri: Uri? = result.data?.data
-            imageUri?.let {
-                val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, it)
-                profileImage.setImageBitmap(bitmap)
-                encodeImage(bitmap)
+    private val pickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            result.data?.data?.let { uri ->
+                selectedImageUri = uri
+                val bmp = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                profileImage.setImageBitmap(bmp)
             }
         }
     }
@@ -44,91 +61,125 @@ class EditProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_profile)
 
-        auth = FirebaseAuth.getInstance()
+        // Firebase refs
+        auth     = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance().getReference("Members")
-
-        profileImage = findViewById(R.id.ProfilePicture)
-        name = findViewById(R.id.nameEditText)
-        username = findViewById(R.id.usernameEditText)
-        contact = findViewById(R.id.contactEditText)
-        updateButton = findViewById(R.id.myBtn)
-
-        userId = auth.currentUser?.uid
-
-        if (userId == null) {
-            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show()
+        userId   = auth.currentUser?.uid ?: run {
+            Toast.makeText(this, "Not authenticated", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
-        loadUserData(userId!!)
+        // Retrofit init
+        val retrofit = Retrofit.Builder()
+            .baseUrl("http://192.168.94.111/RAMsolutions/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        api = retrofit.create(ApiService::class.java)
 
-        profileImage.setOnClickListener {
-            openImagePicker()
-        }
+        // UI
+        profileImage = findViewById(R.id.ProfilePicture)
+        nameEt        = findViewById(R.id.nameEditText)
+        usernameEt    = findViewById(R.id.usernameEditText)
+        contactEt     = findViewById(R.id.contactEditText)
+        updateButton  = findViewById(R.id.myBtn)
 
-        updateButton.setOnClickListener {
-            updateUserData(userId!!)
-        }
+        // Load text fields from Firebase + image from server
+        loadUserData()
+        loadProfileImage()
+
+        profileImage.setOnClickListener { openImagePicker() }
+        updateButton.setOnClickListener { updateUserData() }
     }
 
-    private fun loadUserData(userId: String) {
-        database.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    val user = snapshot.getValue(User::class.java)
-                    user?.let {
-                        name.setText(it.name)
-                        username.setText(it.username)
-                        contact.setText(it.phone)
-
-                        if (it.dp.isNotEmpty()) {
-                            val decodedImage = Base64.decode(it.dp, Base64.DEFAULT)
-                            val bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.size)
-                            profileImage.setImageBitmap(bitmap)
-                        }
+    private fun loadUserData() {
+        database.child(userId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snap: DataSnapshot) {
+                    snap.getValue(User::class.java)?.let { u ->
+                        nameEt.setText(u.name)
+                        usernameEt.setText(u.username)
+                        contactEt.setText(u.phone)
                     }
                 }
-            }
+                override fun onCancelled(e: DatabaseError) {
+                    Toast.makeText(this@EditProfileActivity, "Load failed", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
 
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@EditProfileActivity, "Failed to load data: ${error.message}", Toast.LENGTH_SHORT).show()
+    private fun loadProfileImage() {
+        lifecycleScope.launch {
+            try {
+                val resp = api.getProfile(userId)
+                if (resp.isSuccessful && resp.body()?.status == "success") {
+                    resp.body()?.image_url?.let { url ->
+                        Glide.with(this@EditProfileActivity)
+                            .load(url)
+                            .placeholder(R.drawable.plus_sign)
+                            .into(profileImage)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("EditProfile", "GET image failed", e)
             }
-        })
+        }
     }
 
     private fun openImagePicker() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        imagePickerLauncher.launch(intent)
-    }
-
-    private fun encodeImage(bitmap: Bitmap) {
-        val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-        val byteArray = outputStream.toByteArray()
-        encodedImage = Base64.encodeToString(byteArray, Base64.DEFAULT)
-    }
-
-    private fun updateUserData(userId: String) {
-        val updatedName = name.text.toString().trim()
-        val updatedUsername = username.text.toString().trim()
-        val updatedContact = contact.text.toString().trim()
-
-        val updates = mapOf(
-            "name" to updatedName,
-            "username" to updatedUsername,
-            "phone" to updatedContact,
-            "dp" to (encodedImage ?: "")
+        pickerLauncher.launch(
+            Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         )
+    }
 
-        database.child(userId).updateChildren(updates)
-            .addOnSuccessListener {
-                Toast.makeText(this@EditProfileActivity, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this@EditProfileActivity, MemberHomePage::class.java)
-                finish()
+    private fun updateUserData() {
+        val updatedName     = nameEt.text.toString().trim()
+        val updatedUsername = usernameEt.text.toString().trim()
+        val updatedContact  = contactEt.text.toString().trim()
+
+        // 1) Update text fields in Firebase
+        database.child(userId).updateChildren(mapOf(
+            "name"     to updatedName,
+            "username" to updatedUsername,
+            "phone"    to updatedContact
+        ))
+
+        // 2) If an image was picked, upload it
+        selectedImageUri?.let { uri ->
+            lifecycleScope.launch {
+                try {
+                    // Convert URI → temp File
+                    val tempFile = File(cacheDir, "upload_${UUID.randomUUID()}.jpg")
+                    withContext(Dispatchers.IO) {
+                        contentResolver.openInputStream(uri)?.use { input ->
+                            FileOutputStream(tempFile).use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                    }
+                    val reqFile = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
+                    val part    = MultipartBody.Part.createFormData(
+                        "image", tempFile.name, reqFile
+                    )
+                    val userBody = userId.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                    val resp = api.uploadProfileImage(userBody, part)
+                    if (resp.isSuccessful && resp.body()?.status == "success") {
+                        resp.body()?.image_url?.let { url ->
+                            // 3) Save returned URL into Firebase dp field
+                            database.child(userId).child("dp").setValue(url)
+                        }
+                    } else {
+                        Toast.makeText(this@EditProfileActivity, "Image upload failed", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Log.e("EditProfile", "POST image failed", e)
+                    Toast.makeText(this@EditProfileActivity, " ${e.message} Image upload error", Toast.LENGTH_SHORT).show()
+                }
             }
-            .addOnFailureListener {
-                Toast.makeText(this@EditProfileActivity, "Failed to update profile", Toast.LENGTH_SHORT).show()
-            }
+        }
+
+        Toast.makeText(this, "Profile updated", Toast.LENGTH_SHORT).show()
+        finish()
     }
 }

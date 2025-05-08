@@ -42,9 +42,24 @@ android {
 }
 
 dependencies {
+    // Retrofit + Gson
+
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
+// Coroutines
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+// Glide for image loading
+    implementation ("com.github.bumptech.glide:glide:4.12.0")
+//    kapt ("com.github.bumptech.glide:compiler:4.12.0")
+
+
+
     implementation("androidx.recyclerview:recyclerview:1.3.2")
 
-    implementation(files("libs/exifinterface-1.3.7.aar"))
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+
+//    implementation(files("libs/exifinterface-1.3.7.aar"))
     implementation(files("libs/camera-camera2-1.4.1.aar"))
     implementation(files("libs/camera-lifecycle-1.4.1.aar"))
     implementation(files("libs/camera-view-1.4.1.aar"))
@@ -58,7 +73,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
 
     // Firebase dependencies
-    implementation(libs.firebase.auth)
+//    implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.messaging) // FCM dependency
