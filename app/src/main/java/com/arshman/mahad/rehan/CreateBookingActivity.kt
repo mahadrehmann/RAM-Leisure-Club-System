@@ -41,7 +41,9 @@ class CreateBookingActivity : AppCompatActivity() {
         val times = listOf("Select Time", "09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM")
         spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, times)
 
+        val dbHelper = BookingDbHelper(this)
         submit.setOnClickListener {
+            // 1) Read & validate inputs
             val title = titleEt.text.toString().trim()
             val description = descEt.text.toString().trim()
             val time = spinner.selectedItem as String
@@ -61,32 +63,43 @@ class CreateBookingActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            // 2) Show progress & disable button
             progressBar.visibility = View.VISIBLE
             submit.isEnabled = false
 
+            // 3) Prepare Booking object
             val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val currentDate = dateFormat.format(Date())
-
-            val bookingId = database.push().key ?: return@setOnClickListener
+            val bookingId = database.push().key ?: UUID.randomUUID().toString()
             val booking = Booking(
                 id = bookingId,
                 title = title,
                 description = description,
                 time = time,
                 date = currentDate,
-                userId = currentUser.uid
+                userId = currentUser.uid,
+                isSynced = 0
             )
 
-            database.child(bookingId).setValue(booking)
+            // 4) Save locally first
+            val dbHelper = BookingDbHelper(this)
+            dbHelper.insertOrUpdate(booking)
+
+            // 5) Attempt upload to Firebase
+            database.child(bookingId)
+                .setValue(booking)
                 .addOnSuccessListener {
+                    // 6a) Mark local record as synced
+                    dbHelper.markSynced(bookingId)
+
+                    // 6b) Send OneSignal notification
                     val deviceState = OneSignal.getDeviceState()
-                    if (deviceState == null || deviceState.userId.isNullOrEmpty()) {
-                        Log.e(TAG, "OneSignal device state or player ID is null")
-                        showErrorAndFinish("Unable to send notification - device not registered")
+                    if (deviceState?.userId.isNullOrEmpty()) {
+                        Log.e(TAG, "OneSignal player ID is null")
+                        showErrorAndFinish("Unable to send notification – device not registered")
                         return@addOnSuccessListener
                     }
-
-                    val playerId = deviceState.userId
+                    val playerId = deviceState!!.userId
                     val data = mapOf(
                         "bookingId" to bookingId,
                         "bookingTitle" to title,
@@ -94,7 +107,6 @@ class CreateBookingActivity : AppCompatActivity() {
                         "bookingDate" to currentDate,
                         "notificationType" to "booking_confirmation"
                     )
-
                     notificationService.sendBookingNotification(
                         playerId = playerId,
                         heading = "Booking Confirmation",
@@ -102,19 +114,21 @@ class CreateBookingActivity : AppCompatActivity() {
                         data = data
                     )
 
+                    // 6c) Restore UI & finish
                     progressBar.visibility = View.GONE
                     submit.isEnabled = true
-
                     Toast.makeText(this, "Booking created successfully", Toast.LENGTH_SHORT).show()
                     finish()
                 }
                 .addOnFailureListener { e ->
+                    // 7) On failure, keep local record unsynced for retry
                     progressBar.visibility = View.GONE
                     submit.isEnabled = true
-                    Log.e(TAG, "Failed to create booking", e)
-                    Toast.makeText(this, "Failed to create booking: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Failed to upload booking", e)
+                    Toast.makeText(this, "Booking saved offline. It will sync when you’re back online.", Toast.LENGTH_LONG).show()
                 }
         }
+
     }
 
     private fun showErrorAndFinish(message: String) {
