@@ -10,92 +10,123 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.arshman.mahad.rehan.ApiService
+import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class AdminHomeActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
+    private lateinit var api: ApiService
+
     private lateinit var profileImageView: ImageView
     private lateinit var nameTextView: TextView
     private lateinit var roleTextView: TextView
+
+    private lateinit var userId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_admin_home)
 
-        // Initialize Firebase
+        // Firebase & Auth
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance().getReference("Admin")
-
-        // Get current user ID
-        val userId = auth.currentUser?.uid
-        if (userId == null) {
-            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
+        userId = auth.currentUser?.uid ?: run {
+            Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, AdminLoginActivity::class.java))
             finish()
             return
         }
 
-        val profile = findViewById<LinearLayout>(R.id.llProfile)
-        profile.setOnClickListener {
-            val intent = Intent(this, AdminProfileActivity::class.java)
-            startActivity(intent)
+        // Retrofit init
+        val baseUrl = getString(R.string.base_url)
+        api = Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+
+        // Navigation cards
+        findViewById<LinearLayout>(R.id.llProfile).setOnClickListener {
+            startActivity(Intent(this, AdminProfileActivity::class.java))
+        }
+        findViewById<LinearLayout>(R.id.cardManagemember).setOnClickListener {
+            startActivity(Intent(this, ManageMemberActivity::class.java))
+        }
+        findViewById<LinearLayout>(R.id.cardManagestaff).setOnClickListener {
+            startActivity(Intent(this, ManageStaffActivity::class.java))
+        }
+        findViewById<LinearLayout>(R.id.cardMaintainFacilities).setOnClickListener {
+            startActivity(Intent(this, MaintainFacility::class.java))
         }
 
-        val managemember = findViewById<LinearLayout>(R.id.cardManagemember)
-        managemember.setOnClickListener {
-            val intent = Intent(this, ManageMemberActivity::class.java)
-            startActivity(intent)
-        }
-
-        val managestaff = findViewById<LinearLayout>(R.id.cardManagestaff)
-        managestaff.setOnClickListener {
-            val intent = Intent(this, ManageStaffActivity::class.java)
-            startActivity(intent)
-        }
-
-        val maintainFacility = findViewById<LinearLayout>(R.id.cardMaintainFacilities)
-        maintainFacility.setOnClickListener {
-            val intent = Intent(this, MaintainFacility::class.java)
-            startActivity(intent)
-        }
-
-        // Initialize views
+        // Views
         profileImageView = findViewById(R.id.imgProfile)
-        nameTextView = findViewById(R.id.tvName)
-        roleTextView = findViewById(R.id.tvRole)
+        nameTextView     = findViewById(R.id.tvName)
+        roleTextView     = findViewById(R.id.tvRole)
 
-        // Load user data
-        loadUserData(userId)
+        // Load
+        loadUserData()
+        loadProfileImage()
     }
 
-    private fun loadUserData(userId: String) {
-        database.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    val user = snapshot.getValue(User::class.java)
-                    user?.let {
+    private fun loadUserData() {
+        database.child(userId)
+            .addListenerForSingleValueEvent(object: ValueEventListener {
+                override fun onDataChange(snap: DataSnapshot) {
+                    snap.getValue(User::class.java)?.let {
                         nameTextView.text = it.name
-                        roleTextView.text = "Admin" // Static role for now
+                        roleTextView.text = "Admin"
+                    }
+                }
+                override fun onCancelled(e: DatabaseError) {
+                    Toast.makeText(this@AdminHomeActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
 
-                        // Decode and set profile picture
-                        if (it.dp.isNotEmpty()) {
-                            val decodedImage = Base64.decode(it.dp, Base64.DEFAULT)
-                            val bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.size)
-                            profileImageView.setImageBitmap(bitmap)
+    private fun loadProfileImage() {
+        lifecycleScope.launch {
+            try {
+                val resp = api.getProfile(userId)
+                if (resp.isSuccessful && resp.body()?.status == "success") {
+                    resp.body()!!.image_url?.let { url ->
+                        Glide.with(this@AdminHomeActivity)
+                            .load(url)
+                            .placeholder(R.drawable.ic_profile)
+                            .circleCrop()
+                            .into(profileImageView)
+                        return@launch
+                    }
+                }
+            } catch (_: Exception) { }
+            // fallback Base64 dp
+            database.child(userId).child("dp")
+                .addListenerForSingleValueEvent(object: ValueEventListener {
+                    override fun onDataChange(snap: DataSnapshot) {
+                        val dp = snap.getValue(String::class.java) ?: return
+                        if (dp.startsWith("http")) {
+                            Glide.with(this@AdminHomeActivity)
+                                .load(dp)
+                                .placeholder(R.drawable.ic_profile)
+                                .circleCrop()
+                                .into(profileImageView)
+                        } else if (dp.isNotEmpty()) {
+                            val decoded = Base64.decode(dp, Base64.DEFAULT)
+                            val bmp = BitmapFactory.decodeByteArray(decoded, 0, decoded.size)
+                            profileImageView.setImageBitmap(bmp)
                         }
                     }
-                } else {
-                    Toast.makeText(this@AdminHomeActivity, "User data not found", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@AdminHomeActivity, "Failed to load data: ${error.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
+                    override fun onCancelled(e: DatabaseError) {}
+                })
+        }
     }
 }

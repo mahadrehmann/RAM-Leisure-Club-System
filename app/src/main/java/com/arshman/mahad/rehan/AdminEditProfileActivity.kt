@@ -1,6 +1,5 @@
 package com.arshman.mahad.rehan
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -8,129 +7,185 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Base64
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.arshman.mahad.rehan.ApiService
+import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import de.hdodenhof.circleimageview.CircleImageView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
+import java.io.FileOutputStream
 import java.io.ByteArrayOutputStream
+import java.util.*
 
 class AdminEditProfileActivity : AppCompatActivity() {
 
     private lateinit var profileImage: CircleImageView
-    private lateinit var name: EditText
-    private lateinit var username: EditText
-    private lateinit var contact: EditText
+    private lateinit var nameEt: EditText
+    private lateinit var usernameEt: EditText
+    private lateinit var contactEt: EditText
     private lateinit var updateButton: Button
 
-    private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
-    private var userId: String? = null
+    private lateinit var database: DatabaseReference
+    private lateinit var api: ApiService
+    private lateinit var userId: String
 
-    private var encodedImage: String? = null
+    private var selectedImageUri: Uri? = null
 
-    private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK && result.data != null) {
-            val imageUri: Uri? = result.data?.data
-            imageUri?.let {
-                val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, it)
-                profileImage.setImageBitmap(bitmap)
-                encodeImage(bitmap)
+    private val pickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            result.data?.data?.let {
+                selectedImageUri = it
+                val bmp = MediaStore.Images.Media.getBitmap(contentResolver, it)
+                profileImage.setImageBitmap(bmp)
             }
         }
     }
 
-    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin_edit_profile)
 
-        auth = FirebaseAuth.getInstance()
+        auth     = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance().getReference("Admin")
-
-        profileImage = findViewById(R.id.ProfilePicture)
-        name = findViewById(R.id.nameEditText)
-        username = findViewById(R.id.usernameEditText)
-        contact = findViewById(R.id.contactEditText)
-        updateButton = findViewById(R.id.myBtn)
-
-        userId = auth.currentUser?.uid
-
-        if (userId == null) {
-            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show()
+        userId   = auth.currentUser?.uid ?: run {
+            Toast.makeText(this, "Not authenticated", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
-        loadUserData(userId!!)
+        // Retrofit
+        val baseUrl = getString(R.string.base_url)
+        api = Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
 
-        profileImage.setOnClickListener {
-            openImagePicker()
-        }
+        profileImage = findViewById(R.id.ProfilePicture)
+        nameEt        = findViewById(R.id.nameEditText)
+        usernameEt    = findViewById(R.id.usernameEditText)
+        contactEt     = findViewById(R.id.contactEditText)
+        updateButton  = findViewById(R.id.myBtn)
 
-        updateButton.setOnClickListener {
-            updateUserData(userId!!)
-        }
+        loadUserData()
+        loadProfileImage()
+
+        profileImage.setOnClickListener { pickerLauncher.launch(
+            Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        )}
+
+        updateButton.setOnClickListener { updateUserData() }
     }
 
-    private fun loadUserData(userId: String) {
-        database.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    val user = snapshot.getValue(User::class.java)
-                    user?.let {
-                        name.setText(it.name)
-                        username.setText(it.username)
-                        contact.setText(it.phone)
-
-                        if (it.dp.isNotEmpty()) {
-                            val decodedImage = Base64.decode(it.dp, Base64.DEFAULT)
-                            val bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.size)
-                            profileImage.setImageBitmap(bitmap)
-                        }
+    private fun loadUserData() {
+        database.child(userId)
+            .addListenerForSingleValueEvent(object: ValueEventListener {
+                override fun onDataChange(snap: DataSnapshot) {
+                    snap.getValue(User::class.java)?.let {
+                        nameEt.setText(it.name)
+                        usernameEt.setText(it.username)
+                        contactEt.setText(it.phone)
                     }
                 }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@AdminEditProfileActivity, "Failed to load data: ${error.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
+                override fun onCancelled(e: DatabaseError) {}
+            })
     }
 
-    private fun openImagePicker() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        imagePickerLauncher.launch(intent)
+    private fun loadProfileImage() {
+        lifecycleScope.launch {
+            try {
+                val resp = api.getProfile(userId)
+                if (resp.isSuccessful && resp.body()?.status=="success") {
+                    resp.body()!!.image_url?.let { url ->
+                        Glide.with(this@AdminEditProfileActivity)
+                            .load(url)
+                            .placeholder(R.drawable.ic_profile)
+                            .circleCrop()
+                            .into(profileImage)
+                        return@launch
+                    }
+                }
+            } catch (_: Exception) {}
+            // fallback Base64
+            database.child(userId).child("dp")
+                .addListenerForSingleValueEvent(object: ValueEventListener {
+                    override fun onDataChange(snap: DataSnapshot) {
+                        val dp = snap.getValue(String::class.java) ?: return
+                        if (dp.startsWith("http")) {
+                            Glide.with(this@AdminEditProfileActivity)
+                                .load(dp)
+                                .placeholder(R.drawable.ic_profile)
+                                .circleCrop()
+                                .into(profileImage)
+                        } else if (dp.isNotEmpty()) {
+                            val bytes = Base64.decode(dp, Base64.DEFAULT)
+                            val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            profileImage.setImageBitmap(bmp)
+                        }
+                    }
+                    override fun onCancelled(e: DatabaseError) {}
+                })
+        }
     }
 
-    private fun encodeImage(bitmap: Bitmap) {
-        val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-        val byteArray = outputStream.toByteArray()
-        encodedImage = Base64.encodeToString(byteArray, Base64.DEFAULT)
-    }
+    private fun updateUserData() {
+        val updatedName     = nameEt.text.toString().trim()
+        val updatedUsername = usernameEt.text.toString().trim()
+        val updatedContact  = contactEt.text.toString().trim()
 
-    private fun updateUserData(userId: String) {
-        val updatedName = name.text.toString().trim()
-        val updatedUsername = username.text.toString().trim()
-        val updatedContact = contact.text.toString().trim()
-
-        val updates = mapOf(
-            "name" to updatedName,
+        database.child(userId).updateChildren(mapOf(
+            "name"     to updatedName,
             "username" to updatedUsername,
-            "phone" to updatedContact,
-            "dp" to (encodedImage ?: "")
-        )
+            "phone"    to updatedContact
+        ))
 
-        database.child(userId).updateChildren(updates)
-            .addOnSuccessListener {
-                Toast.makeText(this@AdminEditProfileActivity, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(this@AdminEditProfileActivity, AdminHomeActivity::class.java))
-                finish()
+        selectedImageUri?.let { uri ->
+            lifecycleScope.launch {
+                try {
+                    val tmp = File(cacheDir, "upload_${UUID.randomUUID()}.jpg")
+                    withContext(Dispatchers.IO) {
+                        contentResolver.openInputStream(uri)?.use { inp ->
+                            FileOutputStream(tmp).use { out -> inp.copyTo(out) }
+                        }
+                    }
+                    val reqFile = tmp.asRequestBody("image/*".toMediaTypeOrNull())
+                    val part = MultipartBody.Part.createFormData("image", tmp.name, reqFile)
+                    val uidBody = userId.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                    val r = api.uploadProfileImage(uidBody, part)
+                    if (r.isSuccessful && r.body()?.status=="success") {
+                        r.body()!!.image_url?.let { url ->
+                            database.child(userId).child("dp").setValue(url)
+                        }
+                    } else {
+                        Toast.makeText(this@AdminEditProfileActivity, "Upload failed", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@AdminEditProfileActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
-            .addOnFailureListener {
-                Toast.makeText(this@AdminEditProfileActivity, "Failed to update profile", Toast.LENGTH_SHORT).show()
-            }
+        }
+
+        Toast.makeText(this, "Profile updated", Toast.LENGTH_SHORT).show()
+        startActivity(Intent(this, AdminHomeActivity::class.java))
+        finish()
     }
 }

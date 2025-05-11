@@ -7,7 +7,7 @@ data class Staff(
     val password: String = "",
     val phone: String = "",
     val name: String = "",
-    val dp: String = "",
+    var dp: String = "",
     var isSynced: Int = 0    // 0 = not yet sent to Firebase; 1 = sent
 ) {
     constructor() : this("", "", "", "", "", "", "", 0)
