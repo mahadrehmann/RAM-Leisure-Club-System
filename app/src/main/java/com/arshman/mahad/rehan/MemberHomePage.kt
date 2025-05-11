@@ -3,6 +3,7 @@ package com.arshman.mahad.rehan
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -44,9 +45,12 @@ class MemberHomePage : AppCompatActivity() {
             return
         }
 
+        val baseUrl = getString(R.string.base_url)
+        Log.d("BASE_URL_CHECK", "Base URL is: $baseUrl")
+
         // Retrofit for image API
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://192.168.94.111/RAMsolutions/")
+            .baseUrl(baseUrl)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         api = retrofit.create(ApiService::class.java)

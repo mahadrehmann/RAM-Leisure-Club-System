@@ -70,9 +70,12 @@ class EditProfileActivity : AppCompatActivity() {
             return
         }
 
+        val baseUrl = getString(R.string.base_url)
+        Log.d("BASE_URL_CHECK", "Base URL is: $baseUrl")
+
         // Retrofit init
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://192.168.94.111/RAMsolutions/")
+            .baseUrl(baseUrl)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         api = retrofit.create(ApiService::class.java)
